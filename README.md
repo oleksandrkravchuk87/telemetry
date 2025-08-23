@@ -28,12 +28,15 @@ make dependencies
 make generate
 ````` 
 # For sink server
-cd ../sink
+````` 
+cd sink
 make dependencies
 make generate
+````` 
 
 ### Sensor Node
-````` cd sensor_node
+````` 
+cd sensor_node
 make build-linux     # Linux binary
 make build-windows   # Windows binary
 make build-macos     # macOS Intel binary
@@ -41,14 +44,15 @@ make build-macos-arm # macOS ARM binary
 make build-all       # All platforms
 ````` 
 ### Sink Server
-````` cd sink
+````` 
+cd sink
 make build
 ````` 
 ### TLS Certificate Setup
 Generate self-signed certificates for development:
 #### TLS:
 ````` ./scripts/generate-certs.sh`````
-#### mTLS
+#### mTLS:
 ````` ./scripts/generate-mtls-certs.sh`````
 
 ## Running the Applications
@@ -111,7 +115,7 @@ cd sensor_node
 - `--client-cert`: Path to client certificate file (for mTLS)
 - `--client-key`: Path to client private key file (for mTLS)
 
-**Examples:**
+**Example:**
 
 ## Single sensor:
 ````` 
