@@ -15,50 +15,49 @@ A distributed telemetry system consisting of sensor nodes that generate data and
 ## Installation
 
 1. Clone the repository:
-
+````` 
 git clone <repository-url>
 cd telemetry
-
+````` 
 2. Install dependencies:
 
 # For sensor node
+````` 
 cd sensor_node
-make install-deps
+make dependencies
 make generate
-
+````` 
 # For sink server
 cd ../sink
-make install-deps
+make dependencies
 make generate
 
 ### Sensor Node
-cd sensor_node
+````` cd sensor_node
 make build-linux     # Linux binary
 make build-windows   # Windows binary
 make build-macos     # macOS Intel binary
 make build-macos-arm # macOS ARM binary
 make build-all       # All platforms
-
+````` 
 ### Sink Server
-cd sink
+````` cd sink
 make build
-
+````` 
 ### TLS Certificate Setup
 Generate self-signed certificates for development:
-./scripts/generate-certs.sh
-
-This creates:
-certs/ca-cert.pem - CA certificate
-certs/server-cert.pem - Server certificate
-certs/server-key.pem - Server private key
+#### TLS:
+````` ./scripts/generate-certs.sh`````
+#### mTLS
+````` ./scripts/generate-mtls-certs.sh`````
 
 ## Running the Applications
 
 ### 1. Start the Sink Server
-
+````` 
 cd sink
 ./bin/server [options]
-
+````` 
 **Command line options:**
 - `--bind-addr`: Server bind address (default: `:9090`)
 - `--log-file`: Path to output log file (default: `telemetry.log`)
@@ -81,22 +80,28 @@ cd sink
 
 **Example:**
 Basic server:
+````` 
 ./bin/server --bind-addr=":9090" --log-file="telemetry.log" --buffer-size=8192 --flush-interval="5s" --rate-limit=2097152
+`````
 
 Server with TLS:
+````` 
 ./bin/server --tls --cert-file=../certs/server-cert.pem --key-file=../certs/server-key.pem
-
+````` 
 Server with mTLS:
+````` 
 ./bin/server --tls --cert-file=../certs/server-cert.pem --key-file=../certs/server-key.pem --ca-file=../certs/ca-cert.pem
-
+````` 
 Server with custom encryption key:
+````` 
 ENCRYPTION_KEY=$(openssl rand -base64 32)
 ./bin/server --encrypt --encryption-key="$ENCRYPTION_KEY"
-
+````` 
 ### 2. Start Sensor Nodes
+````` 
 cd sensor_node
 ./bin/sensor_node-linux-amd64 [options]
-
+````` 
 **Command line options:**
 - `--rate`: Number of messages per second (default: `1.0`)
 - `--sensor-name`: Name of the sensor (default: `"default-sensor"`)
@@ -108,34 +113,42 @@ cd sensor_node
 
 **Examples:**
 
-Single sensor:
+## Single sensor:
+````` 
 ./bin/sensor_node-linux-amd64 --sensor-name="temperature-01" --rate=2.0 --sink-addr="localhost:9090"
-
-Single sensor with TLS:
+````` 
+## Single sensor with TLS:
+````` 
 ./bin/sensor_node-linux-amd64 --sensor-name="temperature-01" --rate=2.0 --tls --cert-file=../certs/ca-cert.pem
-
-Single sensor with mutual TLS:
+````` 
+## Single sensor with mutual TLS:
+````` 
 ./bin/sensor_node-linux-amd64 --sensor-name="temperature-01" --rate=2.0 --tls --cert-file=../certs/ca-cert.pem --client-cert=../certs/client-cert.pem --client-key=../certs/client-key.pem
-
-Multiple sensors:
-# Terminal 1
+````` 
+## Multiple sensors:
+````` 
+#### Terminal 1
 ./bin/sensor_node-linux-amd64 --sensor-name="temperature-01" --rate=1.0
 
-# Terminal 2
+#### Terminal 2
 ./bin/sensor_node-linux-amd64 --sensor-name="humidity-01" --rate=0.5
 
-# Terminal 3
+#### Terminal 3
 ./bin/sensor_node-linux-amd64 --sensor-name="pressure-01" --rate=2.0
-
+````` 
 # Client in Docker container:
+````` 
 sudo docker build -t telemetry/sensor-node .
 docker run --rm --network host   telemetry/sensor-node   --sensor-name="docker-temp-01"   --rate=2.0   --sink-addr="localhost:9090"
-
+````` 
 ## Cleanup
 
 # Clean build artifacts
+````` 
 cd sensor_node && make clean
 cd ../sink && make clean
-
+````` 
 # Remove log files
+````` 
 rm -f sink/telemetry.log
+````` 
