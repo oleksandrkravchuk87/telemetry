@@ -88,7 +88,7 @@ FROM (
      ) AS vals
          JOIN sensors s ON s.name = vals.sensor_name;
 
--- Select Query (grouped by room and second, average values)
+-- Select Query 1 (grouped by room and second, average values)
 SELECT
     a.room AS room,
     a.ts AS timestamp,
@@ -113,7 +113,7 @@ ORDER BY
     a.room, a.ts;
 
 
--- Select Query 2 use the R value from the previous second
+-- Select Query 2 (use the R value from the previous second)
 WITH v_agg AS (
     SELECT
         r.name AS room,
