@@ -125,6 +125,21 @@ WITH v_agg AS (
     WHERE s.type = 'V'
     GROUP BY r.name, ts
 ),
+
+-- AVG R for each second
+     r_avg AS (
+         SELECT
+             r.name AS room,
+             CAST(DATE_FORMAT(m.timestamp, '%Y-%m-%d %H:%i:%s') AS DATETIME) AS ts,
+             AVG(m.value) AS r_avg
+         FROM measurements m
+                  JOIN sensors s ON m.sensor_id = s.id
+                  JOIN rooms r ON s.room_id = r.id
+         WHERE s.type = 'R'
+         GROUP BY r.name, ts
+     ),
+
+-- Last R for each second (timestamp)
      r_raw AS (
          SELECT
              r.name AS room,
@@ -136,7 +151,7 @@ WITH v_agg AS (
                   JOIN rooms r ON s.room_id = r.id
          WHERE s.type = 'R'
      ),
--- Last R for each room in a second
+
      r_latest_per_sec AS (
          SELECT
              room,
@@ -145,28 +160,31 @@ WITH v_agg AS (
              ROW_NUMBER() OVER (PARTITION BY room, ts ORDER BY timestamp DESC) AS rn
          FROM r_raw
      ),
-     r_main AS (
+
+     r_last AS (
          SELECT room, ts, value
          FROM r_latest_per_sec
          WHERE rn = 1
      ),
--- For each V: R from current and previous second
+
+-- For each V get r_avg, or last R from prev second
      r_selected AS (
          SELECT
              v.room,
              v.ts AS v_ts,
              COALESCE(
-                     (SELECT value FROM r_main r WHERE r.room = v.room AND r.ts = v.ts),
-                     (SELECT value FROM r_main r WHERE r.room = v.room AND r.ts = v.ts - INTERVAL 1 SECOND)
+                     (SELECT r_avg.r_avg FROM r_avg WHERE r_avg.room = v.room AND r_avg.ts = v.ts),
+                     (SELECT r_last.value FROM r_last WHERE r_last.room = v.room AND r_last.ts = v.ts - INTERVAL 1 SECOND)
              ) AS r_value
          FROM v_agg v
      )
+
 SELECT
     v.room,
     v.ts AS timestamp,
     ROUND(v.v_avg, 2) AS V,
     ROUND(r.r_value, 2) AS R,
-    v.v_avg / NULLIF(r.r_value, 0) AS I
+    ROUND(v.v_avg / NULLIF(r.r_value, 0), 2) AS I
 FROM v_agg v
          LEFT JOIN r_selected r
                    ON v.room = r.room AND v.ts = r.v_ts
